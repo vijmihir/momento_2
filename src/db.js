@@ -242,6 +242,27 @@ export async function getReel(id) {
   return data
 }
 
+// ── Guest memory threads ─────────────────────────────────────────────────────
+export async function addPhotoNote({ photoId, eventId, authorName, text }) {
+  const { data, error } = await supabase
+    .from('photo_notes')
+    .insert({ photo_id: photoId, event_id: eventId, author_name: authorName, text })
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export async function listPhotoNotes(eventId) {
+  const { data, error } = await supabase
+    .from('photo_notes')
+    .select('*')
+    .eq('event_id', eventId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return data || []
+}
+
 function randomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let c = ''

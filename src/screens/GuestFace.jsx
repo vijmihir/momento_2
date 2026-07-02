@@ -31,12 +31,23 @@ export default function GuestFace() {
     }
     const matched = new Set()
     const distances = []
-    for (const p of photos.filter(ph => ph.type === 'pro')) {
-      const faces = p.descriptors?.length ? p.descriptors : await allFaceDescriptors(p.src)
-      if (appearsIn(desc, faces)) {
+    if (DEMO_MODE) {
+      // Demo photos are stock images of strangers — a real selfie will never
+      // genuinely match them. Seed a few "matches" so the demo tells the
+      // right story (highlight reel, matched-photo ring, etc. all work).
+      const proPhotos = photos.filter(ph => ph.type === 'pro').slice(0, 5)
+      proPhotos.forEach((p, i) => {
         matched.add(p.id)
-        const d = bestMatchDistance(desc, faces)
-        if (d !== null) distances.push({ photoId: p.id, distance: d })
+        distances.push({ photoId: p.id, distance: 0.3 + i * 0.03 })
+      })
+    } else {
+      for (const p of photos.filter(ph => ph.type === 'pro')) {
+        const faces = p.descriptors?.length ? p.descriptors : await allFaceDescriptors(p.src)
+        if (appearsIn(desc, faces)) {
+          matched.add(p.id)
+          const d = bestMatchDistance(desc, faces)
+          if (d !== null) distances.push({ photoId: p.id, distance: d })
+        }
       }
     }
     setFoundCount(matched.size)

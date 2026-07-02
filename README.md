@@ -134,6 +134,11 @@ to add the tables/columns these need. Also create a second Storage bucket named
   a structured anniversary date per event. The sending function itself is written but **not
   deployed** — see `supabase/functions/anniversary-emails/README.md` for the remaining manual
   steps (Resend API key, `supabase functions deploy`, `pg_cron` schedule).
+- **Guest memory threads** — anyone can add a caption or story to any photo, any time, from the
+  photo's fullscreen view. Gives guests a reason to reopen the gallery long after the event.
+- **"This day" banner** — when a guest reopens the gallery on the event's structured anniversary
+  date, a banner shows "N years ago today" with their top matched photos. The in-app companion to
+  the anniversary email. (In DEMO_MODE this always shows, so the demo tells its story reliably.)
 
 ## Files
 - `src/App.jsx` — all screens and flows

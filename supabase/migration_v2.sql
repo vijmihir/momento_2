@@ -99,3 +99,19 @@ create policy "owner reads email log" on anniversary_emails_log for select using
 
 -- See supabase/functions/anniversary-emails/README.md for the remaining manual
 -- steps (Resend key, function deploy, pg_cron schedule) to actually send emails.
+
+-- ── 5. Guest memory threads ─────────────────────────────────────────────────────
+-- Public captions/stories guests can add to any photo, any time (not just the
+-- event day) — this is what gives guests a reason to reopen the app later.
+create table if not exists photo_notes (
+  id uuid primary key default gen_random_uuid(),
+  photo_id uuid references photos on delete cascade,
+  event_id uuid references events on delete cascade,
+  author_name text,
+  text text not null,
+  created_at timestamptz default now()
+);
+
+alter table photo_notes enable row level security;
+create policy "public read photo notes" on photo_notes for select using (true);
+create policy "insert photo notes" on photo_notes for insert with check (true);

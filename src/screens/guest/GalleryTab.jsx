@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext.jsx'
 import Header from '../../components/Header.jsx'
 import Filters from '../../components/Gallery/Filters.jsx'
 import PhotoGrid from '../../components/Gallery/PhotoGrid.jsx'
+import ThisDayBanner from '../../components/Gallery/ThisDayBanner.jsx'
 
 export default function GalleryTab({ onPick }) {
   const { event, photos, guestName, myDescriptor, matchedIds } = useApp()
@@ -30,6 +31,8 @@ export default function GalleryTab({ onPick }) {
         sub={`${event?.name} · ${photos.length} photos`}
         initial={(guestName[0] || 'G').toUpperCase()}
       />
+
+      <ThisDayBanner event={event} photos={photos} matchedIds={matchedIds} onPick={onPick} />
 
       {/* Face match banner */}
       {myDescriptor && matchCount > 0 && (
