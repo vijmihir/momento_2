@@ -16,7 +16,7 @@ export default function PhDash() {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
-  const [form, setForm] = useState({ name: '', venue: '', date: '' })
+  const [form, setForm] = useState({ name: '', venue: '', date: '', eventDate: '' })
 
   const refresh = useCallback(async () => {
     setLoading(true)
@@ -32,14 +32,14 @@ export default function PhDash() {
     if (DEMO_MODE) {
       const ev = { id: 'demo-new-' + Date.now(), name: form.name, venue: form.venue, date: form.date || 'Today', code: 'NEW' + Math.random().toString(36).slice(2,5).toUpperCase(), cover: '1519741497674-611481863552' }
       setEvents(prev => [ev, ...prev])
-      setCreating(false); setForm({ name: '', venue: '', date: '' })
+      setCreating(false); setForm({ name: '', venue: '', date: '', eventDate: '' })
       showToast(`Created! Code: ${ev.code}`)
       return
     }
     try {
       const ev = await createEvent(form)
       setEvents(prev => [ev, ...prev])
-      setCreating(false); setForm({ name: '', venue: '', date: '' })
+      setCreating(false); setForm({ name: '', venue: '', date: '', eventDate: '' })
       showToast(`Event created · code ${ev.code}`)
     } catch (e) { showToast(e.message || 'Could not create event') }
   }
@@ -107,7 +107,8 @@ export default function PhDash() {
               <div style={{ fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 14 }}>New event</div>
               <Field label="Event name *" value={form.name} set={v => setForm(f => ({...f, name: v}))} placeholder="Sharma · Gupta Wedding" />
               <Field label="Venue" value={form.venue} set={v => setForm(f => ({...f, venue: v}))} placeholder="The Shangri-La" />
-              <Field label="Date" value={form.date} set={v => setForm(f => ({...f, date: v}))} placeholder="Jun 14 2026" mb={18} />
+              <Field label="Date" value={form.date} set={v => setForm(f => ({...f, date: v}))} placeholder="Jun 14 2026" />
+              <Field label="Anniversary date (for future memory emails)" value={form.eventDate} set={v => setForm(f => ({...f, eventDate: v}))} type="date" mb={18} />
               <div style={{ display: 'flex', gap: 8 }}>
                 <Btn kind="primary" onClick={create}>Create event</Btn>
                 <button onClick={() => setCreating(false)} style={{ padding: '0 18px', background: T.cream2, borderRadius: 12, color: T.muted, fontSize: 14, fontWeight: 500 }}>Cancel</button>

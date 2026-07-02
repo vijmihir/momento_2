@@ -5,7 +5,7 @@ import Photo from '../ui/Photo.jsx'
 const GAP = 4
 const TARGET_HEIGHT = 160
 
-export default function PhotoGrid({ photos, isMine, onPick }) {
+export default function PhotoGrid({ photos, isMine, onPick, renderBadge }) {
   const wrapRef = useRef(null)
   const [width, setWidth] = useState(390)
   const [ratios, setRatios] = useState({})
@@ -114,6 +114,7 @@ export default function PhotoGrid({ photos, isMine, onPick }) {
                     ✦
                   </span>
                 )}
+                {renderBadge && renderBadge(p)}
               </div>
             )
           })}

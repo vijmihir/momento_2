@@ -115,8 +115,29 @@ You need HTTPS for the camera — Vercel gives you that automatically.
 - Match strictness: `threshold` in `src/faceEngine.js` (0.5 strict … 0.6 loose).
 - For thousands of photos, swap face-api.js for AWS Rekognition (same flow, faster/more accurate).
 
+## v2 features (live wall, delivery workflow, highlight reels, anniversary emails)
+
+Run `supabase/migration_v2.sql` in the Supabase SQL editor (after the base schema above)
+to add the tables/columns these need. Also create a second Storage bucket named
+**`reels`** (Public), same as `photos`.
+
+- **Live photo wall** — Share tab → "Live photo wall" → open the link on a venue TV/projector.
+  Real-time via Supabase Realtime; new guest photos appear within seconds.
+- **Delivery workflow** — Share tab → "Couple portal" link. Couple can favorite photos and
+  leave revision notes; photographer manages delivery status (shooting → editing → proofing →
+  delivered) from the event's Delivery tab. Photos show a "PREVIEW" watermark until delivered.
+- **AI highlights reel** — guests get a "Create my highlight reel ✦" button in My Photos once
+  they have matched photos; photographer can also generate an event-wide reel from the Delivery
+  tab. Renders a ~35s Ken Burns video client-side (canvas + MediaRecorder) — no server, no extra
+  dependencies. Needs a Chromium/Firefox-based browser (`MediaRecorder` webm support).
+- **Anniversary emails** — guests can leave an email at Face ID registration; photographers set
+  a structured anniversary date per event. The sending function itself is written but **not
+  deployed** — see `supabase/functions/anniversary-emails/README.md` for the remaining manual
+  steps (Resend API key, `supabase functions deploy`, `pg_cron` schedule).
+
 ## Files
 - `src/App.jsx` — all screens and flows
 - `src/db.js` — Supabase client + all data functions (swap point for any backend)
 - `src/faceEngine.js` — face detection + matching
 - `src/camera.js` — live camera hook + film filter
+- `src/reelEngine.js` — Ken Burns slideshow-to-video export (canvas + MediaRecorder)

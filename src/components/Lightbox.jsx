@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { T } from '../theme.js'
 
-export default function Lightbox({ photo, onClose }) {
+export default function Lightbox({ photo, onClose, actions }) {
   useEffect(() => {
     const onKey = e => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
@@ -101,6 +101,8 @@ export default function Lightbox({ photo, onClose }) {
             </button>
           )}
         </div>
+
+        {actions && <div style={{ marginTop: 14 }} onClick={e => e.stopPropagation()}>{actions}</div>}
       </div>
     </div>
   )

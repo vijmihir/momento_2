@@ -12,6 +12,11 @@ import GuestApp from './screens/guest/GuestApp.jsx'
 import PhAuth from './screens/photographer/PhAuth.jsx'
 import PhDash from './screens/photographer/PhDash.jsx'
 import PhEvent from './screens/photographer/PhEvent.jsx'
+import WallView from './screens/WallView.jsx'
+import CoupleJoin from './screens/couple/CoupleJoin.jsx'
+import CoupleApp from './screens/couple/CoupleApp.jsx'
+import HighlightReel from './screens/guest/HighlightReel.jsx'
+import ReelView from './screens/ReelView.jsx'
 
 function Router() {
   const { view, toast, authLoading } = useApp()
@@ -33,6 +38,11 @@ function Router() {
       {view === 'phAuth'    && <PhAuth />}
       {view === 'phDash'    && <PhDash />}
       {view === 'phEvent'   && <PhEvent />}
+      {view === 'wall'      && <WallView />}
+      {view === 'coupleJoin' && <CoupleJoin />}
+      {view === 'coupleApp'  && <CoupleApp />}
+      {view === 'guestReel'  && <HighlightReel />}
+      {view === 'reelView'   && <ReelView />}
       <Toast msg={toast} />
     </>
   )

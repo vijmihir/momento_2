@@ -1,14 +1,14 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
-import { DEMO_MODE, getCurrentUser, getEventByCode, listPhotos } from '../db.js'
+import { DEMO_MODE, getCurrentUser, getEventByCode, getEventByCoupleCode, listPhotos, getReel } from '../db.js'
 import { loadModels } from '../faceEngine.js'
 
 // ─── Demo data ────────────────────────────────────────────────────────────────
 function img(id) { return `https://images.unsplash.com/photo-${id}?w=600&q=80` }
 
 export const DEMO_EVENTS = [
-  { id:'demo-1', name:'Sharma · Gupta Wedding', venue:'The Shangri-La', date:'Jun 14 2026', code:'SHARMA', cover:'1519741497674-611481863552' },
-  { id:'demo-2', name:'Kumar Corporate Summit',  venue:'Marina Bay Sands', date:'Jun 10 2026', code:'KUMAR',  cover:'1540575467063-178a50c2df87' },
-  { id:'demo-3', name:"Priya's 30th Birthday",   venue:'Capella Hotel',  date:'Jun 5 2026',  code:'PRIYA',  cover:'1530103862676-de8c9debad1d' },
+  { id:'demo-1', name:'Sharma · Gupta Wedding', venue:'The Shangri-La', date:'Jun 14 2026', code:'SHARMA', couple_code:'SHARMAC', status:'proofing', cover:'1519741497674-611481863552' },
+  { id:'demo-2', name:'Kumar Corporate Summit',  venue:'Marina Bay Sands', date:'Jun 10 2026', code:'KUMAR', couple_code:'KUMARC', status:'shooting', cover:'1540575467063-178a50c2df87' },
+  { id:'demo-3', name:"Priya's 30th Birthday",   venue:'Capella Hotel',  date:'Jun 5 2026',  code:'PRIYA', couple_code:'PRIYAC', status:'delivered', cover:'1530103862676-de8c9debad1d' },
 ]
 
 export const DEMO_PHOTOS = {
@@ -63,8 +63,16 @@ export function AppProvider({ children }) {
   const [event, setEvent] = useState(null)
   const [photos, setPhotos] = useState([])
   const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
   const [myDescriptor, setMyDescriptor] = useState(null)
   const [matchedIds, setMatchedIds] = useState(new Set())
+  const [guestId, setGuestId] = useState(null)
+
+  // Couple (delivery portal) session
+  const [coupleName, setCoupleName] = useState('')
+
+  // Highlight reel being viewed publicly
+  const [reel, setReel] = useState(null)
 
   const showToast = useCallback(msg => {
     setToast(msg)
@@ -90,6 +98,56 @@ export function AppProvider({ children }) {
     }
   }, [showToast])
 
+  const startWallView = useCallback(async (code) => {
+    if (DEMO_MODE) {
+      const ev = DEMO_EVENTS.find(e => e.code === code.toUpperCase()) || DEMO_EVENTS[0]
+      setEvent(ev)
+      setPhotos(DEMO_PHOTOS[ev.id] || [])
+      setView('wall')
+      return
+    }
+    try {
+      const ev = await getEventByCode(code)
+      if (!ev) { showToast('No event with that code'); return }
+      setEvent(ev)
+      setPhotos(await listPhotos(ev.id))
+      setView('wall')
+    } catch {
+      showToast('Could not load event')
+    }
+  }, [showToast])
+
+  const startCoupleJoin = useCallback(async (code) => {
+    if (DEMO_MODE) {
+      const ev = DEMO_EVENTS.find(e => e.code === code.toUpperCase()) || DEMO_EVENTS[0]
+      setEvent(ev)
+      setPhotos(DEMO_PHOTOS[ev.id] || [])
+      setView('coupleJoin')
+      return
+    }
+    try {
+      const ev = await getEventByCoupleCode(code)
+      if (!ev) { showToast('No event with that couple code'); return }
+      setEvent(ev)
+      setPhotos(await listPhotos(ev.id))
+      setView('coupleJoin')
+    } catch {
+      showToast('Could not load event')
+    }
+  }, [showToast])
+
+  const startReelView = useCallback(async (id) => {
+    if (DEMO_MODE) { showToast('Reels need a live Supabase project'); setView('splash'); return }
+    try {
+      const r = await getReel(id)
+      if (!r) { showToast('Reel not found'); return }
+      setReel(r)
+      setView('reelView')
+    } catch {
+      showToast('Could not load reel')
+    }
+  }, [showToast])
+
   useEffect(() => {
     ;(async () => {
       loadModels().catch(() => {})
@@ -98,11 +156,17 @@ export function AppProvider({ children }) {
         if (u) { setUser(u); setView('phDash') }
       }
       const params = new URLSearchParams(window.location.search)
+      const wallCode = params.get('wall')
+      const coupleCode = params.get('c')
+      const reelId = params.get('reel')
       const code = params.get('e')
-      if (code) await startGuestJoin(code)
+      if (wallCode) await startWallView(wallCode)
+      else if (coupleCode) await startCoupleJoin(coupleCode)
+      else if (reelId) await startReelView(reelId)
+      else if (code) await startGuestJoin(code)
       setAuthLoading(false)
     })()
-  }, [startGuestJoin])
+  }, [startGuestJoin, startWallView, startCoupleJoin, startReelView])
 
   return (
     <AppContext.Provider value={{
@@ -113,9 +177,16 @@ export function AppProvider({ children }) {
       event, setEvent,
       photos, setPhotos,
       guestName, setGuestName,
+      guestEmail, setGuestEmail,
       myDescriptor, setMyDescriptor,
       matchedIds, setMatchedIds,
+      guestId, setGuestId,
+      coupleName, setCoupleName,
+      reel, setReel,
       startGuestJoin,
+      startWallView,
+      startCoupleJoin,
+      startReelView,
     }}>
       {children}
     </AppContext.Provider>

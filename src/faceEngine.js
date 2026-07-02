@@ -59,3 +59,15 @@ export function appearsIn(mine, photoDescriptors, threshold = 0.55) {
   if (!mine || !photoDescriptors?.length) return false
   return photoDescriptors.some(d => dist(mine, d) < threshold)
 }
+
+// Smallest distance between `mine` and any descriptor in `photoDescriptors`,
+// or null if none match within `threshold`. Lower = more confident match.
+export function bestMatchDistance(mine, photoDescriptors, threshold = 0.55) {
+  if (!mine || !photoDescriptors?.length) return null
+  let best = null
+  for (const d of photoDescriptors) {
+    const dd = dist(mine, d)
+    if (dd < threshold && (best === null || dd < best)) best = dd
+  }
+  return best
+}

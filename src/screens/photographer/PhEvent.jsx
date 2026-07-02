@@ -1,33 +1,24 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { T } from '../../theme.js'
 import { useApp } from '../../context/AppContext.jsx'
-import { DEMO_MODE, uploadPhoto, listPhotos, listGuests } from '../../db.js'
+import { DEMO_MODE, uploadPhoto, listPhotos, listGuests, updateEventStatus, listFavorites, listRevisionNotes, resolveRevisionNote } from '../../db.js'
 import { DEMO_PHOTOS, DEMO_GUESTS, GUEST_COLORS } from '../../context/AppContext.jsx'
 import { loadModels, allFaceDescriptors } from '../../faceEngine.js'
 import Shell from '../../components/Shell.jsx'
 import Spinner from '../../components/ui/Spinner.jsx'
 import Avatar from '../../components/ui/Avatar.jsx'
 import Photo from '../../components/ui/Photo.jsx'
-
-// QR via free API — no package needed
-function QRCode({ url, size = 200 }) {
-  const src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(url)}&bgcolor=F7F3EA&color=1C1814&margin=10`
-  return (
-    <img
-      src={src}
-      alt="QR code"
-      width={size}
-      height={size}
-      style={{ borderRadius: 12, display: 'block', margin: '0 auto' }}
-    />
-  )
-}
+import QRCode from '../../components/QRCode.jsx'
+import StatusStepper from '../../components/Delivery/StatusStepper.jsx'
+import ReelButton from '../../components/Delivery/ReelButton.jsx'
 
 export default function PhEvent() {
-  const { event, setView, showToast } = useApp()
+  const { event, setEvent, setView, showToast } = useApp()
   const [tab, setTab] = useState('share')
   const [photos, setPhotos] = useState([])
   const [guests, setGuests] = useState([])
+  const [favorites, setFavorites] = useState([])
+  const [notes, setNotes] = useState([])
   const [uploading, setUploading] = useState(false)
   const [upPct, setUpPct] = useState(0)
   const [upStep, setUpStep] = useState('')
@@ -36,14 +27,18 @@ export default function PhEvent() {
   const refresh = useCallback(async () => {
     if (DEMO_MODE) { setPhotos(DEMO_PHOTOS[event.id] || []); setGuests(DEMO_GUESTS); return }
     try {
-      const [ps, gs] = await Promise.all([listPhotos(event.id), listGuests(event.id)])
-      setPhotos(ps); setGuests(gs)
+      const [ps, gs, fs, ns] = await Promise.all([
+        listPhotos(event.id), listGuests(event.id), listFavorites(event.id), listRevisionNotes(event.id),
+      ])
+      setPhotos(ps); setGuests(gs); setFavorites(fs); setNotes(ns)
     } catch {}
   }, [event])
 
   useEffect(() => { refresh() }, [refresh])
 
   const shareLink = `${window.location.origin}?e=${event.code}`
+  const wallLink = `${window.location.origin}?wall=${event.code}`
+  const coupleLink = `${window.location.origin}?c=${event.couple_code}`
 
   const copyLink = () => {
     navigator.clipboard?.writeText(shareLink)
@@ -51,10 +46,30 @@ export default function PhEvent() {
       .catch(() => showToast(shareLink))
   }
 
+  const copyGeneric = (link, label) => {
+    navigator.clipboard?.writeText(link)
+      .then(() => showToast(`${label} link copied ✓`))
+      .catch(() => showToast(link))
+  }
+
   const shareNative = async () => {
     if (!navigator.share) { copyLink(); return }
     try { await navigator.share({ title: event.name, text: `Join the photo gallery for ${event.name}`, url: shareLink }) }
     catch {}
+  }
+
+  const setStatus = async (status) => {
+    if (DEMO_MODE) { setEvent(e => ({ ...e, status })); showToast(`Status: ${status}`); return }
+    try {
+      const updated = await updateEventStatus(event.id, status)
+      setEvent(updated)
+      showToast(`Status: ${status}`)
+    } catch { showToast('Could not update status') }
+  }
+
+  const markResolved = async (id) => {
+    if (DEMO_MODE) { setNotes(n => n.map(x => x.id === id ? { ...x, resolved: true } : x)); return }
+    try { await resolveRevisionNote(id); refresh() } catch {}
   }
 
   const upload = async (e) => {
@@ -101,7 +116,7 @@ export default function PhEvent() {
         <div style={{ padding: '18px 18px' }}>
           {/* Tab switcher */}
           <div style={{ display: 'flex', gap: 5, marginBottom: 20, background: T.cream2, padding: 4, borderRadius: 14 }}>
-            {[['share','Share'],['upload','Upload'],['guests','Guests']].map(([id, label]) => (
+            {[['share','Share'],['upload','Upload'],['guests','Guests'],['delivery','Delivery']].map(([id, label]) => (
               <button
                 key={id}
                 onClick={() => setTab(id)}
@@ -157,6 +172,40 @@ export default function PhEvent() {
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Live wall */}
+              <div style={{ background: T.dark, borderRadius: 18, padding: 20, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ fontSize: 26 }}>📺</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.off, marginBottom: 2 }}>Live photo wall</div>
+                  <div style={{ fontSize: 11.5, color: T.offDim, lineHeight: 1.4 }}>
+                    Open this link on a venue TV or projector — photos appear in real time as guests submit them.
+                  </div>
+                </div>
+                <button
+                  onClick={() => copyGeneric(wallLink, 'Wall')}
+                  style={{ background: T.offGhost, color: T.off, fontSize: 12, fontWeight: 500, padding: '9px 14px', borderRadius: 10, flexShrink: 0 }}
+                >
+                  Copy
+                </button>
+              </div>
+
+              {/* Couple portal */}
+              <div style={{ background: T.clayTint, border: `1px solid rgba(196,112,58,0.25)`, borderRadius: 18, padding: 20, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ fontSize: 26 }}>💌</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: T.ink, marginBottom: 2 }}>Couple portal</div>
+                  <div style={{ fontSize: 11.5, color: T.muted, lineHeight: 1.4 }}>
+                    Private link for the couple to favorite photos and leave notes. Code: {event.couple_code || '—'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => copyGeneric(coupleLink, 'Couple')}
+                  style={{ background: T.clay, color: '#fff', fontSize: 12, fontWeight: 500, padding: '9px 14px', borderRadius: 10, flexShrink: 0 }}
+                >
+                  Copy
+                </button>
               </div>
 
               {/* Stats */}
@@ -262,6 +311,56 @@ export default function PhEvent() {
                   )}
                 </div>
               ))}
+              {guests.length > 0 && (
+                <div style={{ fontSize: 12, color: T.dim, textAlign: 'center', marginTop: 4 }}>
+                  {guests.filter(g => g.email).length} of {guests.length} guests have email on file
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* DELIVERY TAB */}
+          {tab === 'delivery' && (
+            <div style={{ animation: 'fadeUp .2s ease' }}>
+              <StatusStepper status={event.status || 'shooting'} onChange={setStatus} />
+
+              <div style={{ background: T.card, border: `1px solid ${T.bdr}`, borderRadius: 16, padding: 16, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, letterSpacing: '.4px', textTransform: 'uppercase', marginBottom: 10 }}>
+                  Couple favorites
+                </div>
+                {favorites.length === 0 ? (
+                  <div style={{ fontSize: 13, color: T.dim }}>No favorites yet.</div>
+                ) : (
+                  <div style={{ fontSize: 26, fontWeight: 500 }} className="serif">{favorites.length} <span style={{ fontSize: 13, fontWeight: 400, color: T.dim }}>photos favorited</span></div>
+                )}
+              </div>
+
+              <div style={{ background: T.card, border: `1px solid ${T.bdr}`, borderRadius: 16, padding: 16, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: T.muted, letterSpacing: '.4px', textTransform: 'uppercase', marginBottom: 10 }}>
+                  Revision notes
+                </div>
+                {notes.length === 0 ? (
+                  <div style={{ fontSize: 13, color: T.dim }}>No notes from the couple yet.</div>
+                ) : notes.map(n => (
+                  <div key={n.id} style={{
+                    display: 'flex', gap: 10, alignItems: 'flex-start',
+                    padding: '10px 0', borderTop: `1px solid ${T.cream2}`,
+                    opacity: n.resolved ? 0.5 : 1,
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: T.ink, lineHeight: 1.5, textDecoration: n.resolved ? 'line-through' : 'none' }}>{n.note}</div>
+                      <div style={{ fontSize: 11, color: T.dim, marginTop: 3 }}>{n.author_name}</div>
+                    </div>
+                    {!n.resolved && (
+                      <button onClick={() => markResolved(n.id)} style={{ fontSize: 11, fontWeight: 500, color: T.sage, background: T.sageBg, padding: '5px 10px', borderRadius: 8, flexShrink: 0 }}>
+                        Resolve
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              <ReelButton event={event} photos={photos} favorites={favorites} showToast={showToast} />
             </div>
           )}
         </div>

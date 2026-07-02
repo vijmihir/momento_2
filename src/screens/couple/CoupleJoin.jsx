@@ -1,22 +1,20 @@
 import { useState } from 'react'
-import { T } from '../theme.js'
-import { useApp } from '../context/AppContext.jsx'
-import Shell from '../components/Shell.jsx'
-import Btn from '../components/ui/Btn.jsx'
-import Field from '../components/ui/Field.jsx'
+import { T } from '../../theme.js'
+import { useApp } from '../../context/AppContext.jsx'
+import Shell from '../../components/Shell.jsx'
+import Btn from '../../components/ui/Btn.jsx'
+import Field from '../../components/ui/Field.jsx'
 
-export default function GuestJoin() {
-  const { event, setGuestName, setGuestEmail, setView } = useApp()
+export default function CoupleJoin() {
+  const { event, setCoupleName, setView } = useApp()
   const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
   const [err, setErr] = useState('')
 
   const next = () => {
     const n = name.trim()
     if (!n) { setErr('Add your name'); return }
-    setGuestName(n)
-    setGuestEmail(email.trim())
-    setView('guestFace')
+    setCoupleName(n)
+    setView('coupleApp')
   }
 
   return (
@@ -29,16 +27,15 @@ export default function GuestJoin() {
           ← Back
         </button>
 
-        {/* Event badge */}
         <div style={{
-          background: T.sageTint,
-          border: `1px solid rgba(75,114,89,0.2)`,
+          background: T.clayTint,
+          border: `1px solid rgba(196,112,58,0.25)`,
           borderRadius: 12,
           padding: '12px 16px',
           marginBottom: 28,
         }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: T.sageTxt, letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 4 }}>
-            You're joining
+          <div style={{ fontSize: 11, fontWeight: 600, color: T.clay, letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 4 }}>
+            Your delivery portal
           </div>
           <div style={{ fontSize: 16, fontWeight: 500, color: T.ink }}>{event?.name}</div>
           {(event?.venue || event?.date) && (
@@ -48,32 +45,23 @@ export default function GuestJoin() {
           )}
         </div>
 
-        <h2 className="serif" style={{ fontSize: 30, fontWeight: 500, marginBottom: 8 }}>Welcome 👋</h2>
+        <h2 className="serif" style={{ fontSize: 30, fontWeight: 500, marginBottom: 8 }}>Welcome back 💌</h2>
         <p style={{ fontSize: 14, color: T.muted, lineHeight: 1.6, marginBottom: 28 }}>
-          What's your name? It's shown when you share candids and how you're greeted.
+          Favorite your photos and leave notes for your photographer.
         </p>
 
         <Field
           label="Your name"
           value={name}
           set={v => { setName(v); setErr('') }}
-          placeholder="e.g. Sarah Chen"
+          placeholder="e.g. Priya & Arjun"
           onEnter={next}
         />
         <div style={{ fontSize: 12, color: T.err, minHeight: 16, margin: '-8px 2px 8px' }}>{err}</div>
 
-        <Field
-          label="Email (optional) — get your photos + a surprise on your anniversary"
-          value={email}
-          set={setEmail}
-          placeholder="you@email.com"
-          type="email"
-          onEnter={next}
-        />
-
         <div style={{ flex: 1 }} />
 
-        <Btn kind="primary" onClick={next}>Continue →</Btn>
+        <Btn kind="clay" onClick={next}>Continue →</Btn>
       </div>
     </Shell>
   )

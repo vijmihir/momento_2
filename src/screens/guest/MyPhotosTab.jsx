@@ -77,7 +77,14 @@ export default function MyPhotosTab({ myShots, onPick }) {
           No matches yet — photographer may still be uploading.
         </div>
       ) : (
-        <PhotoGrid photos={myPhotos} isMine={() => true} onPick={onPick} />
+        <>
+          {myPhotos.length > 0 && (
+            <div style={{ margin: '0 14px 16px' }}>
+              <Btn kind="clay" onClick={() => setView('guestReel')}>Create my highlight reel ✦</Btn>
+            </div>
+          )}
+          <PhotoGrid photos={myPhotos} isMine={() => true} onPick={onPick} />
+        </>
       )}
     </div>
   )

@@ -2,15 +2,15 @@ import { useState, useRef } from 'react'
 import { T } from '../theme.js'
 import { useApp } from '../context/AppContext.jsx'
 import { DEMO_MODE } from '../db.js'
-import { joinAsGuest } from '../db.js'
-import { loadModels, faceDescriptor, allFaceDescriptors, appearsIn } from '../faceEngine.js'
+import { joinAsGuest, saveGuestPhotoMatches } from '../db.js'
+import { loadModels, faceDescriptor, allFaceDescriptors, appearsIn, bestMatchDistance } from '../faceEngine.js'
 import { useCamera } from '../camera.js'
 import Shell from '../components/Shell.jsx'
 import Btn from '../components/ui/Btn.jsx'
 import Spinner from '../components/ui/Spinner.jsx'
 
 export default function GuestFace() {
-  const { event, guestName, photos, setMyDescriptor, setMatchedIds, setView, showToast } = useApp()
+  const { event, guestName, guestEmail, photos, setMyDescriptor, setMatchedIds, setGuestId, setView, showToast } = useApp()
   const cam = useCamera('user')
   const fileRef = useRef()
 
@@ -30,14 +30,25 @@ export default function GuestFace() {
       setShotUrl(null); setStep('idle'); return
     }
     const matched = new Set()
+    const distances = []
     for (const p of photos.filter(ph => ph.type === 'pro')) {
       const faces = p.descriptors?.length ? p.descriptors : await allFaceDescriptors(p.src)
-      if (appearsIn(desc, faces)) matched.add(p.id)
+      if (appearsIn(desc, faces)) {
+        matched.add(p.id)
+        const d = bestMatchDistance(desc, faces)
+        if (d !== null) distances.push({ photoId: p.id, distance: d })
+      }
     }
     setFoundCount(matched.size)
     setMyDescriptor(desc)
     setMatchedIds(matched)
-    if (!DEMO_MODE) joinAsGuest({ eventId: event.id, name: guestName, descriptor: desc }).catch(() => {})
+    if (!DEMO_MODE) {
+      try {
+        const row = await joinAsGuest({ eventId: event.id, name: guestName, descriptor: desc, email: guestEmail || null })
+        setGuestId(row.id)
+        await saveGuestPhotoMatches(row.id, event.id, distances)
+      } catch {}
+    }
     setStep('done')
   }
 

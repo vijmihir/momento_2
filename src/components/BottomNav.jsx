@@ -1,6 +1,6 @@
 import { T } from '../theme.js'
 
-const TABS = [
+const DEFAULT_TABS = [
   {
     id: 'gallery', label: 'Gallery',
     icon: (
@@ -32,7 +32,7 @@ const TABS = [
   },
 ]
 
-export default function BottomNav({ tab, setTab, dark }) {
+export default function BottomNav({ tab, setTab, dark, tabs = DEFAULT_TABS }) {
   return (
     <div style={{
       position: 'fixed',
@@ -49,7 +49,7 @@ export default function BottomNav({ tab, setTab, dark }) {
       padding: '8px 0 max(10px, env(safe-area-inset-bottom))',
       zIndex: 50,
     }}>
-      {TABS.map(({ id, label, icon }) => {
+      {tabs.map(({ id, label, icon }) => {
         const active = tab === id
         const isCam = id === 'cam'
         const color = active
