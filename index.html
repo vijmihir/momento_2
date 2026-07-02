@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>momentó — event photos, found by face</title>
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#EFE9DC" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="momentó" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+
+    <!-- OG / social sharing -->
+    <meta property="og:title" content="momentó" />
+    <meta property="og:description" content="Find yourself in the event gallery — AI face matching, disposable camera candids." />
+    <meta property="og:type" content="website" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html {
+        background: #EFE9DC;
+        /* Safe area for notch / home indicator */
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        color: #1C1814;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior: none;
+        /* Prevent iOS bounce on scroll */
+        overflow-y: scroll;
+        height: 100vh;
+      }
+
+      img { display: block; max-width: 100%; }
+      button { font-family: inherit; cursor: pointer; border: none; outline: none; background: none; }
+      input, select, textarea { font-family: inherit; outline: none; border: none; }
+      a { text-decoration: none; color: inherit; }
+
+      .serif { font-family: 'Fraunces', Georgia, 'Times New Roman', serif; }
+
+      /* Hide scrollbars */
+      ::-webkit-scrollbar { width: 0; height: 0; }
+
+      /* Animations */
+      @keyframes spin    { to { transform: rotate(360deg); } }
+      @keyframes fadeUp  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes pulse   { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+      @keyframes pop     { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+      /* Tap highlight */
+      * { -webkit-tap-highlight-color: transparent; }
+
+      /* Prevent text selection on buttons */
+      button { user-select: none; -webkit-user-select: none; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
